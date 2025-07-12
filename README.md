@@ -25,9 +25,8 @@ We set out to design a full-stack web application that demonstrates how differen
 - CSS Modules: For modular and maintainable styling
 
 **Backend**
-- Node.js: To handle server-side logic and API endpoints
-- Express.js: For creating RESTful APIs and managing server routes
-- Python: Integrated for advanced backend tasks and machine learning model serving
+- FastAPI: For handling server-side logic, RESTful APIs, and managing server routes efficiently with Python.
+- Python: The primary language powering the backend, including business logic and machine learning integrations.
 
 **Database**
 - PostgreSQL: Used for structured, relational data management where needed
