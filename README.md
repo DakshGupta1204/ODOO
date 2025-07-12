@@ -222,7 +222,10 @@ Example: `POST /api/skills`
 
 ## 🖼️ Screenshots
 Add screenshots here to showcase UI
-image.png
+![Homepage Screenshot](public/image1.png)
+*Homepage showing the skill matching interface and user dashboard*
+
+
 ---
 
 ## 🤝 Contributing
