@@ -1,5 +1,8 @@
 from supabase_client import supabase
 from models import SkillMatcher, SmartSearch, LearningPathRecommender
+from content_moderator import ContentModerator
+from swap_monitor import SwapMonitor
+from smart_messaging import SmartMessagingSystem
 
 class DatabaseManager:
     def __init__(self):
@@ -161,4 +164,57 @@ class DatabaseManager:
         
         # Subscribe to swap_requests table changes
         supabase.table('swap_requests').on('*', handle_swap_update).subscribe()
+    def moderate_and_create_user_profile(self, user_data):
+        """Checks user bio for violations before creating a profile."""
+        bio = user_data.get('bio', '')
+        moderation_result = self.content_moderator.check_content(bio)
+        
+        if moderation_result['is_spam'] or moderation_result['policy_violations']:
+            # Log the violation and reject the profile
+            supabase.table('content_moderation').insert({
+                'user_id': user_data.get('id'),
+                'content_type': 'profile_bio',
+                'content_text': bio,
+                'is_spam': moderation_result['is_spam'],
+                'policy_violations': moderation_result['policy_violations'],
+                'status': 'rejected'
+            }).execute()
+            return None # Indicate failure
+        
+        # If content is clean, proceed to create the user
+        return self.create_user(user_data)
 
+    def predict_and_create_swap_request(self, swap_data):
+        """Predicts success probability before creating a swap request."""
+        # In a real app, you would fetch user ratings and history here
+        mock_swap_data = {
+            **swap_data,
+            'requester_rating': 4.5,
+            'target_rating': 4.2,
+            'requester_swaps': 10
+        }
+        
+        success_prob = self.swap_monitor.predict_swap_success(mock_swap_data)
+        swap_data['success_probability'] = success_prob
+        
+        # Create the swap request with the prediction
+        return self.create_swap_request(**swap_data)
+    
+    def schedule_personalized_message(self, user_id, message_type='engagement'):
+        """Generates and schedules an AI-powered message for a user."""
+        user_profile = self.get_user_by_id(user_id) # Assume get_user_by_id exists
+        
+        if not user_profile:
+            return None
+    
+        message = self.smart_messaging.generate_personalized_message(user_profile, message_type)
+        
+        # Save the generated message to the database
+        response = supabase.table('platform_messages').insert({
+            'user_id': user_id,
+            'message_content': message,
+            'message_type': message_type,
+            'status': 'scheduled'
+        }).execute()
+        
+        return response.data[0] if response.data else None
