@@ -30,7 +30,6 @@ We set out to design a full-stack web application that demonstrates how differen
 - Python: Integrated for advanced backend tasks and machine learning model serving
 
 **Database**
-- MongoDB: A NoSQL database for flexible data storage and retrieval
 - PostgreSQL: Used for structured, relational data management where needed
 
 **Machine Learning Integration**
@@ -192,31 +191,101 @@ The application should now be running at http://localhost:3000.
 
 
 ## 📚 API Reference
+### 🔐 Authentication
 
-### Endpoints
-**Authentication**
-- `POST /api/auth/register`: Register a new user.
-- `POST /api/auth/login`: Log in and retrieve token.
+These endpoints handle user registration, login, and session management.
 
-**Skills**
-- `GET /api/skills`: Get all skill listings.
-- `POST /api/skills`: Create a skill listing.
-- `GET /api/skills/:id`: Retrieve a single skill.
+---
 
-**Requests**
-- `GET /api/requests`: Get all skill requests.
-- `POST /api/requests`: Create a skill request.
+#### `POST /api/auth/signup`
 
-### Parameters
-Example: `POST /api/skills`
+**Description:**  
+Create a new user account.
+
+**Request Body:**
 ```json
 {
-  "title": "Learn French",
-  "description": "Looking for a partner to help me practice conversational French.",
-  "category": "Language",
-  "exchangeFor": "Guitar lessons"
+  "email": "user@example.com",
+  "password": "your_secure_password",
+  "name": "John Doe"
 }
-```
+
+
+
+#### `POST /api/auth/signin`
+
+**Description:**  
+Authenticate user credentials and return an access token.
+
+
+#### `POST /api/auth/reset-password`
+
+**Description:**  
+Reset the user's password with a valid token.
+
+
+#### `GET /api/auth/me`
+
+**Description:**  
+Get the current authenticated user's profile.
+
+
+#### `POST /api/auth/verify-token`
+
+**Description:**  
+Verify if a provided access token is valid.
+
+
+#### `GET /api/users/{user_id}`
+
+**Description:**  
+Retrieve public profile information for a specific user.
+
+**Response Example:**
+```json
+{
+  "id": "user_id",
+  "name": "Jane Doe",
+  "bio": "Passionate about learning new skills.",
+  "location": "Berlin",
+  "skills_offered": ["Cooking", "JavaScript"],
+  "skills_wanted": ["Python", "Public Speaking"]
+}
+
+
+#### `PUT /api/users/{user_id}`
+
+**Description:**  
+Update the authenticated user's profile.
+
+
+**🧠 Machine Learning & AI**
+#### `GET /api/recommendations/{user_id}`
+
+**Description:**  
+Get AI-powered skill recommendations based on user interests.
+
+**Response Example:**
+```json
+
+{
+  "success": true,
+  "recommendations": [
+    {
+      "skill": "Data Science",
+      "prerequisite": "Python",
+      "reason": "Natural progression from Python"
+    },
+    {
+      "skill": "Django",
+      "prerequisite": "Python",
+      "reason": "High market demand for web development"
+    }
+  ]
+}
+
+
+
 
 ---
 
@@ -236,6 +305,7 @@ Example: `POST /api/skills`
 ![Homepage Screenshot](public/image4.png)
 
 ---
+
 
 ## 🤝 Contributing
 
