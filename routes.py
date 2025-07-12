@@ -185,3 +185,15 @@ def init_routes(app):
             return jsonify({'success': True, 'swap_request': swap_request})
         else:
             return jsonify({'success': False, 'error': 'Failed to create swap request'}), 400
+    @app.route('/api/messages/schedule/<user_id>', methods=['POST'])
+    def schedule_message(user_id):
+        """Schedules a personalized message for a user."""
+        data = request.get_json()
+        message_type = data.get('message_type', 'engagement')
+        
+        scheduled_message = db_manager.schedule_personalized_message(user_id, message_type)
+        
+        if scheduled_message:
+            return jsonify({'success': True, 'message': scheduled_message})
+        else:
+            return jsonify({'success': False, 'error': 'Could not schedule message'}), 500
