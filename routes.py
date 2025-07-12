@@ -1,36 +1,65 @@
-# routes.py
 from flask import request, jsonify
-from models import SkillMatcher, SmartSearch
+from database_manager import DatabaseManager
+from supabase_client import supabase
 
-def init_routes(app, skill_matcher, smart_search, users_data, skills_list):
+db_manager = DatabaseManager()
+
+def init_routes(app):
     
-    @app.route('/api/recommendations/<int:user_id>', methods=['GET'])
-    def get_recommendations(user_id):
-        """Get ML-powered user recommendations"""
+    @app.route('/api/users', methods=['POST'])
+    def create_user():
+        """Create a new user"""
         try:
-            recommendations = skill_matcher.get_recommendations(user_id, users_data)
+            data = request.get_json()
+            
+            # Create user in Supabase
+            user_data = {
+                'email': data['email'],
+                'name': data['name'],
+                'location': data.get('location', ''),
+                'availability': data.get('availability', ''),
+                'bio': data.get('bio', '')
+            }
+            
+            user = db_manager.create_user(user_data)
+            
+            if user:
+                # Add skills if provided
+                for skill in data.get('skills_offered', []):
+                    db_manager.add_user_skill(user['id'], skill, 'offered')
+                
+                for skill in data.get('skills_wanted', []):
+                    db_manager.add_user_skill(user['id'], skill, 'wanted')
+                
+                return jsonify({'success': True, 'user': user})
+            else:
+                return jsonify({'success': False, 'error': 'Failed to create user'}), 400
+                
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    @app.route('/api/recommendations/<user_id>', methods=['GET'])
+    def get_recommendations(user_id):
+        """Get ML-powered recommendations"""
+        try:
+            recommendations = db_manager.get_user_recommendations(user_id)
             return jsonify({
                 'success': True,
-                'user_id': user_id,
                 'recommendations': recommendations
             })
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
     
     @app.route('/api/search', methods=['POST'])
-    def smart_skill_search():
-        """Smart search with fuzzy matching"""
+    def search_skills():
+        """Smart skill search"""
         try:
             data = request.get_json()
             query = data.get('query', '')
             
-            if not query:
-                return jsonify({'success': False, 'error': 'Query is required'}), 400
-            
-            results = smart_search.fuzzy_search(query, skills_list)
+            results = db_manager.search_skills(query)
             return jsonify({
                 'success': True,
-                'query': query,
                 'results': results
             })
         except Exception as e:
@@ -41,28 +70,98 @@ def init_routes(app, skill_matcher, smart_search, users_data, skills_list):
         """Get auto-complete suggestions"""
         try:
             query = request.args.get('q', '')
-            suggestions = smart_search.get_suggestions(query, skills_list)
+            suggestions = db_manager.get_skill_suggestions(query)
             
             return jsonify({
                 'success': True,
-                'query': query,
                 'suggestions': suggestions
             })
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
     
-    @app.route('/api/users', methods=['GET'])
-    def get_all_users():
-        """Get all users"""
-        return jsonify({
-            'success': True,
-            'users': users_data
-        })
+    @app.route('/api/swap-requests', methods=['POST'])
+    def create_swap_request():
+        """Create a new swap request"""
+        try:
+            data = request.get_json()
+            
+            swap_request = db_manager.create_swap_request(
+                data['requester_id'],
+                data['target_id'],
+                data['requester_skill'],
+                data['target_skill'],
+                data.get('message', '')
+            )
+            
+            if swap_request:
+                return jsonify({'success': True, 'swap_request': swap_request})
+            else:
+                return jsonify({'success': False, 'error': 'Failed to create swap request'}), 400
+                
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
     
-    @app.route('/api/users/<int:user_id>', methods=['GET'])
-    def get_user(user_id):
-        """Get specific user"""
-        user = next((u for u in users_data if u['id'] == user_id), None)
-        if user:
-            return jsonify({'success': True, 'user': user})
-        return jsonify({'success': False, 'error': 'User not found'}), 404
+    @app.route('/api/users/<user_id>/swap-requests', methods=['GET'])
+    def get_user_swap_requests(user_id):
+        """Get user's swap requests"""
+        try:
+            swap_requests = db_manager.get_user_swap_requests(user_id)
+            return jsonify({
+                'success': True,
+                'swap_requests': swap_requests
+            })
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+    #Auth Integration
+    @app.route('/api/auth/signup', methods=['POST'])
+    def signup():
+        """User signup with Supabase Auth"""
+        try:
+            data = request.get_json()
+            
+            # Sign up with Supabase Auth
+            response = supabase.auth.sign_up({
+                'email': data['email'],
+                'password': data['password']
+            })
+            
+            if response.user:
+                # Create user profile
+                user_profile = db_manager.create_user({
+                    'email': data['email'],
+                    'name': data['name']
+                })
+                
+                return jsonify({
+                    'success': True,
+                    'user': response.user,
+                    'profile': user_profile
+                })
+            else:
+                return jsonify({'success': False, 'error': 'Signup failed'}), 400
+                
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    @app.route('/api/auth/login', methods=['POST'])
+    def login():
+        """User login with Supabase Auth"""
+        try:
+            data = request.get_json()
+            
+            response = supabase.auth.sign_in_with_password({
+                'email': data['email'],
+                'password': data['password']
+            })
+            
+            if response.user:
+                return jsonify({
+                    'success': True,
+                    'user': response.user,
+                    'session': response.session
+                })
+            else:
+                return jsonify({'success': False, 'error': 'Login failed'}), 401
+                
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
