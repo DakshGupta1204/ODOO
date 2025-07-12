@@ -70,6 +70,28 @@ Our vision is to leverage these modern technologies to empower anyone to learn a
 
 ---
 
+## 🤖 Machine Learning Features
+
+### Intelligent User Matching
+- **Jaccard Similarity Scoring**: Advanced algorithm to match users based on skill compatibility
+- **Profile Analysis**: Deep learning models analyze user profiles and interaction patterns
+- **Dynamic Matching**: Real-time updates to matching scores as user skills evolve
+- **Compatibility Metrics**: Multi-dimensional scoring considering skill overlap and complementarity
+
+### Smart Search System
+- **Fuzzy Search**: Intelligent search with typo tolerance using Levenshtein distance
+- **Auto-complete**: Real-time suggestions as users type
+- **Contextual Understanding**: NLP-powered understanding of skill relationships
+- **Category Detection**: Automatic skill categorization and grouping
+
+### Learning Path Recommendations
+- **Personalized Progression**: AI-driven customized learning roadmaps
+- **Market Analysis**: Integration of industry demand data
+- **Skill Graph**: Knowledge graph representing skill relationships and dependencies
+- **Adaptive Suggestions**: Recommendations that evolve with user progress
+
+---
+
 ## 📑 Table of Contents
 
 - [Installation](#installation)
