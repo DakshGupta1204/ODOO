@@ -1,56 +1,151 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BackgroundGradientAnimation } from '@/components/ui/background-gradient-animation';
 import { SparklesCore } from '@/components/ui/sparkles';
+import { authApi, ApiErrorClass } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
+import { useToast } from '@/lib/toast-context';
+import { useFormValidation } from '@/lib/use-form-validation';
+import { PasswordStrength } from '@/components/ui/password-strength';
 
 export default function AuthPage() {
+  const router = useRouter();
+  const { login } = useAuth();
+  const { showToast } = useToast();
+  
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    name: '',
-  });
+  
+  // Password visibility states
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Form validation for sign in
+  const signInForm = useFormValidation(
+    { email: '', password: '' },
+    {
+      email: { required: true, email: true },
+      password: { required: true, minLength: 6 },
+    }
+  );
+
+  // Form validation for sign up
+  const signUpForm = useFormValidation(
+    { email: '', password: '', confirmPassword: '', firstName: '', lastName: '' },
+    {
+      email: { required: true, email: true },
+      password: { required: true, minLength: 6 },
+      confirmPassword: { required: true, match: 'password' },
+      firstName: { required: true, minLength: 2 },
+      lastName: { required: true, minLength: 2 },
+    }
+  );
+
+  // Form validation for forgot password
+  const forgotPasswordForm = useFormValidation(
+    { email: '' },
+    {
+      email: { required: true, email: true },
+    }
+  );
+
+  const currentForm = showForgotPassword ? forgotPasswordForm : (activeTab === 'signin' ? signInForm : signUpForm);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    const { name, value } = e.target;
+    currentForm.handleChange(name, value);
+  };
+
+  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name } = e.target;
+    currentForm.handleBlur(name);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!currentForm.validateForm()) {
+      showToast('Please fix the errors in the form', 'error');
+      return;
+    }
+
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsLoading(false);
-    // Handle success/error here
-    console.log('Form submitted:', { activeTab, formData });
+    try {
+      if (activeTab === 'signin') {
+        const response = await authApi.signIn({
+          email: signInForm.values.email,
+          password: signInForm.values.password,
+        });
+        
+        login(response);
+        showToast('Welcome back! You have been signed in successfully.', 'success');
+        router.push('/home');
+        
+      } else if (activeTab === 'signup') {
+        const response = await authApi.signUp({
+          email: signUpForm.values.email,
+          password: signUpForm.values.password,
+          first_name: signUpForm.values.firstName,
+          last_name: signUpForm.values.lastName,
+        });
+        
+        login(response);
+        showToast('Account created successfully! Welcome to SkillSwap!', 'success');
+        router.push('/home');
+      }
+    } catch (error) {
+      if (error instanceof ApiErrorClass) {
+        showToast(error.message, 'error');
+      } else {
+        showToast('An unexpected error occurred. Please try again.', 'error');
+      }
+      console.error('Auth error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogleSignIn = () => {
-    console.log('Google Sign In clicked');
-    // Implement Google OAuth here
+  // Handle tab switching and reset forms
+  const handleTabSwitch = (tab: 'signin' | 'signup') => {
+    setActiveTab(tab);
+    signInForm.reset();
+    signUpForm.reset();
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!forgotPasswordForm.validateForm()) {
+      showToast('Please enter a valid email address', 'error');
+      return;
+    }
+
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsLoading(false);
-    alert('Password reset link sent to your email!');
-    setShowForgotPassword(false);
+    try {
+      await authApi.forgotPassword({
+        email: forgotPasswordForm.values.email,
+      });
+      
+      showToast('Password reset link sent to your email!', 'success');
+      setShowForgotPassword(false);
+      forgotPasswordForm.reset();
+    } catch (error) {
+      if (error instanceof ApiErrorClass) {
+        showToast(error.message, 'error');
+      } else {
+        showToast('Failed to send reset email. Please try again.', 'error');
+      }
+      console.error('Forgot password error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -161,12 +256,16 @@ export default function AuthPage() {
                       type="email"
                       id="reset-email"
                       name="email"
-                      value={formData.email}
+                      value={forgotPasswordForm.values.email}
                       onChange={handleInputChange}
+                      onBlur={handleInputBlur}
                       required
                       className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm transition-all"
                       placeholder="Enter your email"
                     />
+                    {forgotPasswordForm.touched.email && forgotPasswordForm.errors.email && (
+                      <p className="mt-1 text-sm text-red-300">{forgotPasswordForm.errors.email}</p>
+                    )}
                   </motion.div>
 
                   <motion.div
@@ -215,7 +314,7 @@ export default function AuthPage() {
                   className="flex bg-white/10 rounded-2xl p-1 mb-8"
                 >
                   <button
-                    onClick={() => setActiveTab('signin')}
+                    onClick={() => handleTabSwitch('signin')}
                     className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
                       activeTab === 'signin'
                         ? 'bg-white text-purple-700 shadow-lg'
@@ -225,7 +324,7 @@ export default function AuthPage() {
                     Sign In
                   </button>
                   <button
-                    onClick={() => setActiveTab('signup')}
+                    onClick={() => handleTabSwitch('signup')}
                     className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
                       activeTab === 'signup'
                         ? 'bg-white text-purple-700 shadow-lg'
@@ -275,19 +374,50 @@ export default function AuthPage() {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.3, duration: 0.5 }}
                         >
-                          <label htmlFor="name" className="block text-white font-medium mb-2">
-                            Full Name
+                          <label htmlFor="firstName" className="block text-white font-medium mb-2">
+                            First Name
                           </label>
                           <input
                             type="text"
-                            id="name"
-                            name="name"
-                            value={formData.name}
+                            id="firstName"
+                            name="firstName"
+                            value={signUpForm.values.firstName}
                             onChange={handleInputChange}
+                            onBlur={handleInputBlur}
                             required
                             className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm transition-all"
-                            placeholder="Enter your full name"
+                            placeholder="Enter your first name"
                           />
+                          {signUpForm.touched.firstName && signUpForm.errors.firstName && (
+                            <p className="mt-1 text-sm text-red-300">{signUpForm.errors.firstName}</p>
+                          )}
+                        </motion.div>
+                      )}
+
+                      {/* Last Name field for signup */}
+                      {activeTab === 'signup' && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.35, duration: 0.5 }}
+                        >
+                          <label htmlFor="lastName" className="block text-white font-medium mb-2">
+                            Last Name
+                          </label>
+                          <input
+                            type="text"
+                            id="lastName"
+                            name="lastName"
+                            value={signUpForm.values.lastName}
+                            onChange={handleInputChange}
+                            onBlur={handleInputBlur}
+                            required
+                            className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm transition-all"
+                            placeholder="Enter your last name"
+                          />
+                          {signUpForm.touched.lastName && signUpForm.errors.lastName && (
+                            <p className="mt-1 text-sm text-red-300">{signUpForm.errors.lastName}</p>
+                          )}
                         </motion.div>
                       )}
 
@@ -304,12 +434,16 @@ export default function AuthPage() {
                           type="email"
                           id="email"
                           name="email"
-                          value={formData.email}
+                          value={currentForm.values.email}
                           onChange={handleInputChange}
+                          onBlur={handleInputBlur}
                           required
                           className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm transition-all"
                           placeholder="Enter your email"
                         />
+                        {currentForm.touched.email && currentForm.errors.email && (
+                          <p className="mt-1 text-sm text-red-300">{currentForm.errors.email}</p>
+                        )}
                       </motion.div>
 
                       {/* Password field */}
@@ -321,16 +455,43 @@ export default function AuthPage() {
                         <label htmlFor="password" className="block text-white font-medium mb-2">
                           Password
                         </label>
-                        <input
-                          type="password"
-                          id="password"
-                          name="password"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          required
-                          className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm transition-all"
-                          placeholder="Enter your password"
-                        />
+                        <div className="relative">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            id="password"
+                            name="password"
+                            value={currentForm.values.password}
+                            onChange={handleInputChange}
+                            onBlur={handleInputBlur}
+                            required
+                            className="w-full px-4 py-3 pr-12 rounded-xl bg-white/10 border border-white/30 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm transition-all"
+                            placeholder="Enter your password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-200 hover:text-white transition-colors"
+                          >
+                            {showPassword ? (
+                              // Eye slash icon (hidden)
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                              </svg>
+                            ) : (
+                              // Eye icon (visible)
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+                        {currentForm.touched.password && currentForm.errors.password && (
+                          <p className="mt-1 text-sm text-red-300">{currentForm.errors.password}</p>
+                        )}
+                        {activeTab === 'signup' && (
+                          <PasswordStrength password={signUpForm.values.password} />
+                        )}
                       </motion.div>
 
                       {/* Confirm Password for signup */}
@@ -343,16 +504,40 @@ export default function AuthPage() {
                           <label htmlFor="confirmPassword" className="block text-white font-medium mb-2">
                             Confirm Password
                           </label>
-                          <input
-                            type="password"
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            value={formData.confirmPassword}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm transition-all"
-                            placeholder="Confirm your password"
-                          />
+                          <div className="relative">
+                            <input
+                              type={showConfirmPassword ? "text" : "password"}
+                              id="confirmPassword"
+                              name="confirmPassword"
+                              value={signUpForm.values.confirmPassword}
+                              onChange={handleInputChange}
+                              onBlur={handleInputBlur}
+                              required
+                              className="w-full px-4 py-3 pr-12 rounded-xl bg-white/10 border border-white/30 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm transition-all"
+                              placeholder="Confirm your password"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-200 hover:text-white transition-colors"
+                            >
+                              {showConfirmPassword ? (
+                                // Eye slash icon (hidden)
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                                </svg>
+                              ) : (
+                                // Eye icon (visible)
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                              )}
+                            </button>
+                          </div>
+                          {signUpForm.touched.confirmPassword && signUpForm.errors.confirmPassword && (
+                            <p className="mt-1 text-sm text-red-300">{signUpForm.errors.confirmPassword}</p>
+                          )}
                         </motion.div>
                       )}
 
@@ -405,35 +590,8 @@ export default function AuthPage() {
                         transition={{ delay: activeTab === 'signup' ? 0.8 : 0.7, duration: 0.5 }}
                         className="relative"
                       >
-                        <div className="absolute inset-0 flex items-center">
-                          <div className="w-full border-t border-white/20"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                          <span className="px-2 bg-white/10 text-purple-200 backdrop-blur-sm rounded-lg">Or continue with</span>
-                        </div>
-                      </motion.div>
-
-                      {/* Google Sign In */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: activeTab === 'signup' ? 0.9 : 0.8, duration: 0.5 }}
-                      >
-                        <motion.button
-                          type="button"
-                          onClick={handleGoogleSignIn}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="w-full bg-white text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all shadow-lg flex items-center justify-center"
-                        >
-                          <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                          </svg>
-                          Continue with Google
-                        </motion.button>
+                        
+                        
                       </motion.div>
                     </form>
                   </motion.div>

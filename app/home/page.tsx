@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SparklesCore } from '@/components/ui/sparkles';
+import { useAuth } from '@/lib/auth-context';
+import { useToast } from '@/lib/toast-context';
 
 // Mock data for demonstration
 const mockUsers = [
@@ -109,14 +112,18 @@ const mockUsers = [
 const availabilityOptions = ["All", "Weekends", "Evenings", "Weekdays", "Flexible"];
 
 export default function HomePage() {
+  const router = useRouter();
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const { showToast } = useToast();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAvailability, setSelectedAvailability] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Mock login state
   const [showRequests, setShowRequests] = useState(false);
   const [selectedUser, setSelectedUser] = useState<typeof mockUsers[0] | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [requestForm, setRequestForm] = useState({
     offeredSkill: '',
     requestedSkill: '',
@@ -124,6 +131,53 @@ export default function HomePage() {
   });
   
   const itemsPerPage = 3;
+
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/auth');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showMobileMenu) {
+        const target = event.target as Element;
+        const mobileMenu = document.querySelector('[data-mobile-menu]');
+        const menuButton = document.querySelector('[data-mobile-menu-button]');
+        
+        if (mobileMenu && !mobileMenu.contains(target) && menuButton && !menuButton.contains(target)) {
+          setShowMobileMenu(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMobileMenu]);
+
+  const handleLogout = () => {
+    logout();
+    showToast('You have been logged out successfully', 'info');
+    router.push('/auth');
+  };
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const handleSubmitRequest = async () => {
     // Mock API call
@@ -276,15 +330,17 @@ export default function HomePage() {
               transition={{ delay: 0.3, duration: 0.6 }}
               className="flex items-center space-x-2 sm:space-x-4"
             >
-              {isLoggedIn ? (
+              {isAuthenticated ? (
                 <>
+                  {/* Desktop Navigation */}
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    className="hidden sm:block"
                   >
                     <Link 
                       href="/notifications"
-                      className="hidden sm:block text-gray-600 hover:text-purple-700 transition-colors px-3 py-2 rounded-lg hover:bg-purple-50"
+                      className="text-gray-600 hover:text-purple-700 transition-colors px-3 py-2 rounded-lg hover:bg-purple-50"
                     >
                       Notifications
                     </Link>
@@ -292,14 +348,18 @@ export default function HomePage() {
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    className="hidden sm:block"
                   >
                     <Link 
                       href="/profile"
-                      className="hidden sm:block text-gray-600 hover:text-purple-700 transition-colors px-3 py-2 rounded-lg hover:bg-purple-50"
+                      className="text-gray-600 hover:text-purple-700 transition-colors px-3 py-2 rounded-lg hover:bg-purple-50"
                     >
                       Profile
                     </Link>
                   </motion.div>
+                  <div className="hidden lg:block text-gray-600 text-sm">
+                    Welcome, <span className="font-semibold text-purple-700">{user?.first_name}!</span>
+                  </div>
                   <motion.button 
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -315,17 +375,34 @@ export default function HomePage() {
                   <motion.button 
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setIsLoggedIn(false)}
+                    onClick={handleLogout}
                     className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg text-sm sm:text-base"
                   >
                     Logout
+                  </motion.button>
+
+                  {/* Mobile Menu Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowMobileMenu(!showMobileMenu)}
+                    data-mobile-menu-button
+                    className="sm:hidden p-2 rounded-lg text-gray-600 hover:text-purple-700 hover:bg-purple-50 transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {showMobileMenu ? (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      ) : (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                      )}
+                    </svg>
                   </motion.button>
                 </>
               ) : (
                 <motion.button 
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setIsLoggedIn(true)}
+                  onClick={() => router.push('/auth')}
                   className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all font-medium shadow-lg text-sm sm:text-base"
                 >
                   Login
@@ -335,6 +412,83 @@ export default function HomePage() {
           </div>
         </div>
       </motion.nav>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {showMobileMenu && isAuthenticated && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            className="sm:hidden fixed top-[76px] left-0 right-0 z-40 bg-white/95 backdrop-blur-md shadow-lg border-b border-purple-100/50"
+            data-mobile-menu
+          >
+            <div className="container mx-auto px-4 py-4">
+              <div className="flex flex-col space-y-3">
+                <div className="text-center py-2 border-b border-purple-100">
+                  <span className="text-sm text-gray-600">Welcome, </span>
+                  <span className="font-semibold text-purple-700">{user?.first_name}!</span>
+                </div>
+                
+                <Link 
+                  href="/notifications"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="flex items-center px-3 py-2 rounded-lg text-gray-600 hover:text-purple-700 hover:bg-purple-50 transition-colors"
+                >
+                  <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zm-8-3a7 7 0 105-6.715V6a3 3 0 106 0v1.715a7 7 0 11-11 5.285z" />
+                  </svg>
+                  Notifications
+                </Link>
+                
+                <Link 
+                  href="/profile"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="flex items-center px-3 py-2 rounded-lg text-gray-600 hover:text-purple-700 hover:bg-purple-50 transition-colors"
+                >
+                  <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Profile
+                </Link>
+                
+                <button
+                  onClick={() => {
+                    setShowRequests(!showRequests);
+                    setShowMobileMenu(false);
+                  }}
+                  className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
+                    showRequests 
+                      ? 'bg-purple-100 text-purple-700' 
+                      : 'text-gray-600 hover:text-purple-700 hover:bg-purple-50'
+                  }`}
+                >
+                  <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  My Requests
+                </button>
+                
+                <div className="border-t border-purple-100 pt-3">
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setShowMobileMenu(false);
+                    }}
+                    className="w-full flex items-center justify-center px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
       <div className="relative">
@@ -415,7 +569,7 @@ export default function HomePage() {
           </motion.div>
 
           {/* Note for non-logged in users */}
-          {!isLoggedIn && (
+          {!isAuthenticated && (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -430,7 +584,7 @@ export default function HomePage() {
           )}
 
           {/* Requests View */}
-          {showRequests && isLoggedIn && (
+          {showRequests && isAuthenticated && (
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -654,7 +808,7 @@ export default function HomePage() {
                     </motion.button>
 
                     {/* Request Button */}
-                    {isLoggedIn ? (
+                    {isAuthenticated ? (
                       <motion.button 
                         whileHover={{ scale: 1.05, rotate: 2 }}
                         whileTap={{ scale: 0.95 }}
@@ -879,7 +1033,7 @@ export default function HomePage() {
                 >
                   Close
                 </motion.button>
-                {isLoggedIn && (
+                {isAuthenticated && (
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
