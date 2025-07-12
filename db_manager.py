@@ -152,3 +152,13 @@ class DatabaseManager:
         except Exception as e:
             print(f"Error fetching swap requests: {e}")
             return []
+    # In database_manager.py
+    def setup_realtime_subscriptions(self):
+        """Setup real-time subscriptions for swap requests"""
+        def handle_swap_update(payload):
+            print(f"Swap request updated: {payload}")
+            # Handle real-time updates here
+        
+        # Subscribe to swap_requests table changes
+        supabase.table('swap_requests').on('*', handle_swap_update).subscribe()
+
