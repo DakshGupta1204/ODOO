@@ -278,13 +278,28 @@ export default function HomePage() {
             >
               {isLoggedIn ? (
                 <>
-                  <motion.button 
+                  <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="hidden sm:block text-gray-600 hover:text-purple-700 transition-colors px-3 py-2 rounded-lg hover:bg-purple-50"
                   >
-                    Profile
-                  </motion.button>
+                    <Link 
+                      href="/notifications"
+                      className="hidden sm:block text-gray-600 hover:text-purple-700 transition-colors px-3 py-2 rounded-lg hover:bg-purple-50"
+                    >
+                      Notifications
+                    </Link>
+                  </motion.div>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Link 
+                      href="/profile"
+                      className="hidden sm:block text-gray-600 hover:text-purple-700 transition-colors px-3 py-2 rounded-lg hover:bg-purple-50"
+                    >
+                      Profile
+                    </Link>
+                  </motion.div>
                   <motion.button 
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
