@@ -165,3 +165,23 @@ def init_routes(app):
                 
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
+    @app.route('/api/users', methods=['POST'])
+    def create_user():
+        data = request.get_json()
+        # This now includes content moderation
+        user = db_manager.moderate_and_create_user_profile(data)
+        if user:
+            return jsonify({'success': True, 'user': user})
+        else:
+            return jsonify({'success': False, 'error': 'Profile contains inappropriate content'}), 400
+    
+    # In your create_swap_request route, use the new prediction method
+    @app.route('/api/swap-requests', methods=['POST'])
+    def create_swap_request():
+        data = request.get_json()
+        # This now includes success prediction
+        swap_request = db_manager.predict_and_create_swap_request(data)
+        if swap_request:
+            return jsonify({'success': True, 'swap_request': swap_request})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to create swap request'}), 400
