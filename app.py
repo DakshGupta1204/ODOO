@@ -1,44 +1,48 @@
-# app.py
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, jsonify
 from flask_cors import CORS
-from models import SkillMatcher, SmartSearch
-import json
+from routes import init_routes
+from db_manager import DatabaseManager
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
-# Initialize ML models
-skill_matcher = SkillMatcher()
-smart_search = SmartSearch()
+# Configure Flask
+app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
 
-# Sample data (replace with database in production)
-users_data = [
-    {
-        'id': 1,
-        'name': 'John Doe',
-        'skills_offered': ['Python', 'Machine Learning', 'Data Science'],
-        'skills_wanted': ['React', 'Frontend Development'],
-        'location': 'Mumbai'
-    },
-    {
-        'id': 2,
-        'name': 'Jane Smith',
-        'skills_offered': ['React', 'JavaScript', 'Frontend Development'],
-        'skills_wanted': ['Python', 'Backend Development'],
-        'location': 'Delhi'
-    }
-]
+# Initialize database manager
+db_manager = DatabaseManager()
 
-skills_list = ['Python', 'JavaScript', 'React', 'Machine Learning', 'Data Science', 
-               'Frontend Development', 'Backend Development', 'Node.js', 'Django']
+# Initialize routes
+init_routes(app)
 
 @app.route('/')
 def home():
     return jsonify({
-        'message': 'Skill Swap Platform API',
+        'message': 'Skill Swap Platform API with Supabase',
         'status': 'running',
-        'endpoints': ['/api/recommendations', '/api/search', '/api/suggestions']
+        'database': 'Supabase connected'
     })
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    try:
+        # Test database connection
+        users = db_manager.get_all_users_with_skills()
+        return jsonify({
+            'status': 'healthy',
+            'database': 'connected',
+            'users_count': len(users)
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
