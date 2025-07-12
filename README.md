@@ -194,29 +194,64 @@ The application should now be running at http://localhost:3000.
 
 ### Endpoints
 **Authentication**
-- `POST /api/auth/register`: Register a new user.
-- `POST /api/auth/login`: Log in and retrieve token.
+- `POST /api/auth/signin`: Register a new user.
+- `POST /api/auth/forgot-password`: Register a new user.
+- `POST /api/auth/reset-password`: Register a new user.
+- `GET /api/auth/me`: Register a new user.
 
-**Skills**
-- `GET /api/skills`: Get all skill listings.
-- `POST /api/skills`: Create a skill listing.
-- `GET /api/skills/:id`: Retrieve a single skill.
+**User and Profile Management**
+- `GET /api/users/{user_id}`: Retrieve public profile information for a specific user..
+- `PUT /api/users/{user_id}`: Update the authenticated user’s profile..
 
-**Requests**
-- `GET /api/requests`: Get all skill requests.
-- `POST /api/requests`: Create a skill request.
+**Machine Learning and AI**
+- `GET /api/recommendations/{user_id}`: Get AI-powered skill recommendations based on user interests.
+- `POST /api/requests`: Search skills with typo correction and relevance ranking.
 
 ### Parameters
-Example: `POST /api/skills`
+Example: `GET /api/users/{user_id}`
 ```json
 {
-  "title": "Learn French",
-  "description": "Looking for a partner to help me practice conversational French.",
-  "category": "Language",
-  "exchangeFor": "Guitar lessons"
+  "id": "user_id",
+  "name": "Jane Doe",
+  "bio": "Passionate about learning new skills.",
+  "location": "Berlin",
+  "skills_offered": ["Cooking", "JavaScript"],
+  "skills_wanted": ["Python", "Public Speaking"]
 }
 ```
 
+Example: `PUT /api/users/{user_id}`
+```json
+{
+  "location": "Bangalore",
+  "bio": "Updated bio describing my passion for coding.",
+  "skills_offered": ["React", "JavaScript", "Next.js"],
+  "skills_wanted": ["Python", "Machine Learning"]
+}
+
+{
+  "message": "Profile updated successfully"
+}
+```
+
+Example: `GET /api/recommendations/{user_id}`
+```json
+{
+  "success": true,
+  "recommendations": [
+    {
+      "skill": "Data Science",
+      "prerequisite": "Python",
+      "reason": "Natural progression from Python"
+    },
+    {
+      "skill": "Django",
+      "prerequisite": "Python",
+      "reason": "High market demand for web development"
+    }
+  ]
+}
+```
 ---
 
 ## 🖼️ Screenshots
