@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SparklesCore } from '@/components/ui/sparkles';
 
@@ -526,7 +527,13 @@ export default function HomePage() {
                       className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-200 to-indigo-200 rounded-full flex items-center justify-center overflow-hidden shadow-lg flex-shrink-0"
                     >
                       {user.profilePhoto ? (
-                        <img src={user.profilePhoto} alt={user.name} className="w-full h-full object-cover" />
+                        <Image 
+                          src={user.profilePhoto} 
+                          alt={user.name} 
+                          width={64}
+                          height={64}
+                          className="w-full h-full object-cover" 
+                        />
                       ) : (
                         <svg className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
@@ -800,7 +807,7 @@ export default function HomePage() {
                     <div key={index} className="bg-green-50 rounded-lg p-4 border border-green-100">
                       <h4 className="font-medium text-green-800 mb-1">{skill}</h4>
                       <p className="text-green-700 text-sm">
-                        {(selectedUser.skillDetails as any)?.[skill] || 'Details not available'}
+                        {(selectedUser.skillDetails as Record<string, string | undefined>)?.[skill] || 'Details not available'}
                       </p>
                     </div>
                   ))}
@@ -815,7 +822,7 @@ export default function HomePage() {
                     <div key={index} className="bg-blue-50 rounded-lg p-4 border border-blue-100">
                       <h4 className="font-medium text-blue-800 mb-1">{skill}</h4>
                       <p className="text-blue-700 text-sm">
-                        {(selectedUser.wantedSkillDetails as any)?.[skill] || 'Details not available'}
+                        {(selectedUser.wantedSkillDetails as Record<string, string | undefined>)?.[skill] || 'Details not available'}
                       </p>
                     </div>
                   ))}

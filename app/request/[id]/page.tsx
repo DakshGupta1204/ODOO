@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BackgroundGradientAnimation } from '@/components/ui/background-gradient-animation';
-import { SparklesCore } from '@/components/ui/sparkles';
 
 // Types
 interface User {
@@ -99,7 +97,6 @@ const mockSwapRequests: Record<string, SwapRequest> = {
 
 export default function RequestDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const [request, setRequest] = useState<SwapRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -247,7 +244,7 @@ export default function RequestDetailPage() {
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-gray-800 mb-4">Request Not Found</h1>
-            <p className="text-gray-600 mb-6">The request you're looking for doesn't exist or has been removed.</p>
+            <p className="text-gray-600 mb-6">The request you&apos;re looking for doesn&apos;t exist or has been removed.</p>
             <Link href="/home" className="inline-block bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium">
               ← Back to Home
             </Link>
