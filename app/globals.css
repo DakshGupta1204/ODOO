@@ -117,3 +117,62 @@
 .animate-fifth {
   animation: fifth 70s linear infinite;
 }
+
+/* Auth Page Animations */
+@keyframes authFloat {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes authGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(147, 51, 234, 0.6);
+  }
+}
+
+@keyframes authShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-auth-float {
+  animation: authFloat 3s ease-in-out infinite;
+}
+
+.animate-auth-glow {
+  animation: authGlow 2s ease-in-out infinite;
+}
+
+.animate-auth-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: authShimmer 2s infinite;
+}
+
+/* Custom Scrollbar for Auth Modal */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}

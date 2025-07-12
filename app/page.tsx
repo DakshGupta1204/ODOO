@@ -34,7 +34,7 @@ export default function Home() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.3, duration: 0.5, type: "spring", stiffness: 200 }}
-              className="text-white text-xl sm:text-2xl font-bold"
+              className="text-white text-xl sm:text-2xl font-bold w-1/3"
             >
               SkillSwap
             </motion.div>
@@ -42,7 +42,7 @@ export default function Home() {
               initial={{ x: 100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.6 }}
-              className="hidden lg:flex space-x-6 xl:space-x-8 text-white"
+              className="hidden lg:flex space-x-6 xl:space-x-8 text-white w-1/3"
             >
               <Link href="#features" className="hover:text-purple-200 transition-colors text-sm lg:text-base">
                 Features
@@ -50,9 +50,7 @@ export default function Home() {
               <Link href="#how-it-works" className="hover:text-purple-200 transition-colors text-sm lg:text-base">
                 How It Works
               </Link>
-              <Link href="#about" className="hover:text-purple-200 transition-colors text-sm lg:text-base">
-                About
-              </Link>
+              
             </motion.div>
             <motion.div 
               initial={{ x: 100, opacity: 0 }}
@@ -63,9 +61,9 @@ export default function Home() {
               <Link href="/home" className="text-white border border-white px-3 sm:px-4 py-2 rounded-lg hover:bg-white hover:text-purple-700 transition-all text-sm lg:text-base text-center">
                 Browse Skills
               </Link>
-              <button className="bg-white text-purple-700 px-3 sm:px-4 py-2 rounded-lg hover:bg-purple-50 transition-all font-medium text-sm lg:text-base">
+              <Link href="/auth" className="bg-white text-purple-700 px-3 sm:px-4 py-2 rounded-lg hover:bg-purple-50 transition-all font-medium text-sm lg:text-base text-center">
                 Get Started
-              </button>
+              </Link>
             </motion.div>
           </div>
         </motion.nav>
@@ -114,7 +112,7 @@ export default function Home() {
                 whileTap={{ scale: 0.95 }}
                 className="w-full sm:w-auto"
               >
-                <Link href="/home" className="w-full sm:w-auto bg-white text-purple-700 px-6 sm:px-8 py-3 sm:py-4 rounded-lg hover:bg-purple-50 transition-all font-semibold text-base lg:text-lg shadow-lg text-center inline-block">
+                <Link href="/auth" className="w-full sm:w-auto bg-white text-purple-700 px-6 sm:px-8 py-3 sm:py-4 rounded-lg hover:bg-purple-50 transition-all font-semibold text-base lg:text-lg shadow-lg text-center inline-block">
                   Start Swapping Skills
                 </Link>
               </motion.div>
@@ -385,7 +383,7 @@ export default function Home() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Link href="/home" className="inline-block bg-white text-purple-700 px-6 sm:px-8 py-3 sm:py-4 rounded-lg hover:bg-purple-50 transition-all font-semibold text-base lg:text-lg shadow-lg">
+            <Link href="/auth" className="inline-block bg-white text-purple-700 px-6 sm:px-8 py-3 sm:py-4 rounded-lg hover:bg-purple-50 transition-all font-semibold text-base lg:text-lg shadow-lg">
               Join SkillSwap Today
             </Link>
           </motion.div>
