@@ -256,17 +256,17 @@ Example: `GET /api/recommendations/{user_id}`
 ## 🖼️ Screenshots
 
 *Welcome to skillswap*
-![Homepage Screenshot](public/image1.png)
-
+<img width="1425" height="512" alt="image" src="https://github.com/user-attachments/assets/1e6a0ad1-55df-43a8-b4ef-4936b096b850" />
 
 *Explore*
-![Homepage Screenshot](public/image2.png)
+<img width="1522" height="520" alt="image" src="https://github.com/user-attachments/assets/fb8548f1-9d30-4973-ba8f-01a3444b0576" />
 
 *Understand the working*
-![Homepage Screenshot](public/img3.png)
+<img width="1500" height="716" alt="image" src="https://github.com/user-attachments/assets/d845d902-fe5b-4f2b-ba9a-93ffd9b28fc4" />
 
 *Find your perfect pair*
-![Homepage Screenshot](public/image4.png)
+<img width="1550" height="942" alt="image" src="https://github.com/user-attachments/assets/760df1ca-2671-4ce1-9c8a-746158bfb709" />
+
 
 ---
 
