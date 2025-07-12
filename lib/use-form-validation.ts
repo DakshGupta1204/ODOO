@@ -16,8 +16,14 @@ interface ValidationError {
   [key: string]: string;
 }
 
-export const useFormValidation = (initialValues: any, validationRules: FieldConfig) => {
-  const [values, setValues] = useState(initialValues);
+// Generic type for form values
+type FormValues = Record<string, string>;
+
+export const useFormValidation = <T extends FormValues>(
+  initialValues: T, 
+  validationRules: FieldConfig
+) => {
+  const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<ValidationError>({});
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
 
@@ -68,7 +74,7 @@ export const useFormValidation = (initialValues: any, validationRules: FieldConf
   };
 
   const handleChange = (name: string, value: string) => {
-    setValues((prev: any) => ({ ...prev, [name]: value }));
+    setValues((prev: T) => ({ ...prev, [name]: value } as T));
     
     // Clear error when user starts typing
     if (errors[name]) {

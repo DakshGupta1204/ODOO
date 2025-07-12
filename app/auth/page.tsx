@@ -460,7 +460,7 @@ export default function AuthPage() {
                             type={showPassword ? "text" : "password"}
                             id="password"
                             name="password"
-                            value={currentForm.values.password}
+                            value={activeTab === 'signin' ? signInForm.values.password : signUpForm.values.password}
                             onChange={handleInputChange}
                             onBlur={handleInputBlur}
                             required
@@ -486,8 +486,11 @@ export default function AuthPage() {
                             )}
                           </button>
                         </div>
-                        {currentForm.touched.password && currentForm.errors.password && (
-                          <p className="mt-1 text-sm text-red-300">{currentForm.errors.password}</p>
+                        {((activeTab === 'signin' && signInForm.touched.password && signInForm.errors.password) ||
+                          (activeTab === 'signup' && signUpForm.touched.password && signUpForm.errors.password)) && (
+                          <p className="mt-1 text-sm text-red-300">
+                            {activeTab === 'signin' ? signInForm.errors.password : signUpForm.errors.password}
+                          </p>
                         )}
                         {activeTab === 'signup' && (
                           <PasswordStrength password={signUpForm.values.password} />
