@@ -221,10 +221,19 @@ Example: `POST /api/skills`
 ---
 
 ## 🖼️ Screenshots
-Add screenshots here to showcase UI
-![Homepage Screenshot](public/image1.png)
-*Homepage showing the skill matching interface and user dashboard*
 
+*Welcome to skillswap*
+![Homepage Screenshot](public/image1.png)
+
+
+*Explore*
+![Homepage Screenshot](public/image2.png)
+
+*Understand the working*
+![Homepage Screenshot](public/img3.png)
+
+*Find your perfect pair*
+![Homepage Screenshot](public/image4.png)
 
 ---
 
