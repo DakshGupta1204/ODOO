@@ -222,7 +222,7 @@ Example: `POST /api/skills`
 
 ## 🖼️ Screenshots
 Add screenshots here to showcase UI
-
+image.png
 ---
 
 ## 🤝 Contributing
